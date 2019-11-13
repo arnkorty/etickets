@@ -3,9 +3,16 @@ import thunk from 'redux-thunk';
 import { createHashHistory } from 'history';
 import { routerMiddleware, routerActions } from 'connected-react-router';
 import { createLogger } from 'redux-logger';
+import { persistStore, persistReducer } from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
 import createRootReducer from '../reducers';
 import * as counterActions from '../actions/counter';
 import type { counterStateType } from '../reducers/types';
+
+const persistConfig = {
+  key: 'root',
+  storage
+};
 
 const history = createHashHistory();
 
@@ -54,7 +61,11 @@ const configureStore = (initialState?: counterStateType) => {
   const enhancer = composeEnhancers(...enhancers);
 
   // Create Store
-  const store = createStore(rootReducer, initialState, enhancer);
+  const store = createStore(
+    persistReducer(persistConfig, rootReducer),
+    initialState,
+    enhancer
+  );
 
   if (module.hot) {
     module.hot.accept(
@@ -64,7 +75,10 @@ const configureStore = (initialState?: counterStateType) => {
     );
   }
 
-  return store;
+  return {
+    store,
+    persistor: persistStore(store)
+  };
 };
 
 export default { configureStore, history };
